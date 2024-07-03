@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "certchain_backend": {
+      "candid": "src/certchain_backend/certchain_backend.did",
+      "package": "certchain_backend",
+      "type": "rust"
+    },
+    "certchain_frontend": {
+      "dependencies": [
+        "certchain_backend"
+      ],
+      "source": [
+        "src/certchain_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "certchain_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
