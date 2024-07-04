@@ -1,16 +1,402 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IC Hello Starter</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Vault Dashboard</title>
+    <link rel="stylesheet" href="front.css">
+
+    <style>
+        /* Basic reset and body styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2; /* Default background color */
+        }
+
+        /* Responsive layout adjustments */
+        @media only screen and (max-width: 768px) {
+            .dashboard {
+                display: flex;
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+            }
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #f2f2f2;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+            display: none;
+        }
+
+        .close-notification {
+            float: right;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Dashboard styles */
+        .dashboard {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sidebar nav ul {
+            list-style-type: none;
+            padding: 0;
+            text-align: center;
+        }
+
+        .sidebar nav ul li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            display: block;
+            padding: 10px 0;
+        }
+
+        .sidebar nav ul li a:hover {
+            background-color: #555;
+            border-radius: 5px;
+        }
+
+        .main-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .main-content h2 {
+            margin-bottom: 20px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-gap: 20px;
+        }
+
+        .grid-item {
+            background-color: #f2f2f2;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* Profile section styles */
+        .profile-info {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .profile-info img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .profile-info p {
+            margin-bottom: 10px;
+        }
+
+        .profile-info button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .profile-info button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Settings section styles */
+        #settings-form {
+            max-width: 400px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        #settings-form label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        #settings-form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        #settings-form button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #settings-form button:hover {
+            background-color: #218838;
+        }
+
+        /* Light and Dark Themes */
+        body.light {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        body.dark {
+            background-color: #333;
+            color: #f2f2f2;
+        }
+    </style>
+
 </head>
-
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.js"></script>
-</body>
+    <!-- Notifications -->
+    <div id="notification" class="notification">
+        <span class="close-notification" onclick="closeNotification()">&times;</span>
+        <p id="notification-message">This is a notification message.</p>
+    </div>
 
+    <!-- Dashboard -->
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Certificate Vault</h2>
+            <nav>
+                <ul>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#profile">Profile</a></li>
+                    <li><a href="#settings">Settings</a></li>
+                    <li><a href="#logout">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Certificate Grid -->
+            <div id="dashboard">
+                <h2>Certificates</h2>
+                <div class="grid-container" id="certificateGrid">
+                    <!-- Initial Certificate Inputs -->
+                    <div class="grid-item">
+                        <label for="certificate1">Certificate 1</label>
+                        <input type="file" id="certificate1" onchange="uploadCertificate(this)">
+                    </div>
+                    <div class="grid-item">
+                        <label for="certificate2">Certificate 2</label>
+                        <input type="file" id="certificate2" onchange="uploadCertificate(this)">
+                    </div>
+                    <div class="grid-item">
+                        <label for="certificate3">Certificate 3</label>
+                        <input type="file" id="certificate3" onchange="uploadCertificate(this)">
+                    </div>
+                    <div class="grid-item">
+                        <label for="certificate4">Certificate 4</label>
+                        <input type="file" id="certificate4" onchange="uploadCertificate(this)">
+                    </div>
+                </div>
+                <!-- Button to Add More Certificates -->
+                <button onclick="addCertificateInput()">Add Certificate</button>
+            </div>
+
+            <!-- Profile Section -->
+            <div id="profile">
+                <h2>Profile</h2>
+                <div class="profile-info">
+                    <img src="profile.jpg" alt="Profile Picture">
+                    <p><strong>Username:</strong> JohnDoe</p>
+                    <p><strong>Email:</strong> john.doe@example.com</p>
+                    <button id="editProfileBtn" onclick="openEditProfileModal()">Edit Profile</button>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settings">
+                <h2>Settings</h2>
+                <form id="settings-form">
+                    <label for="theme">Theme</label>
+                    <select id="theme" name="theme">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                    <button id="saveSettingsBtn" type="button" onclick="saveSettings()">Save Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Edit Profile -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeEditProfileModal()">&times;</span>
+            <h2>Edit Profile</h2>
+            <form id="editProfileForm">
+                <label for="newUsername">New Username:</label><br>
+                <input type="text" id="newUsername" name="newUsername" required><br>
+                <label for="newEmail">New Email:</label><br>
+                <input type="email" id="newEmail" name="newEmail" required><br><br>
+                <button type="button" onclick="updateProfile()">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const notification = document.getElementById("notification");
+            const notificationMessage = document.getElementById("notification-message");
+            const editProfileModal = document.getElementById("editProfileModal");
+            const editProfileBtn = document.getElementById("editProfileBtn");
+            const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+
+            function closeNotification() {
+                notification.style.display = "none";
+            }
+
+            function showNotification(message) {
+                notificationMessage.textContent = message;
+                notification.style.display = "block";
+                setTimeout(closeNotification, 3000);
+            }
+
+            function uploadCertificate(input) {
+                const file = input.files[0];
+                showNotification(`Uploading ${file.name}...`);
+                // Add upload logic here
+                // Example: Send file to server via AJAX
+                // Replace with your actual upload code
+                setTimeout(function() {
+                    showNotification(`${file.name} uploaded successfully.`);
+                }, 1500);
+            }
+
+            function openEditProfileModal() {
+                editProfileModal.style.display = "block";
+            }
+
+            function closeEditProfileModal() {
+                editProfileModal.style.display = "none";
+            }
+
+            function updateProfile() {
+                const newUsername = document.getElementById("newUsername").value;
+                const newEmail = document.getElementById("newEmail").value;
+                showNotification(`Updating profile for ${newUsername} (${newEmail})...`);
+                // Add profile update logic here
+                // Example: Send updated profile data to server via AJAX
+                // Replace with your actual update code
+                setTimeout(function() {
+                    showNotification("Profile updated successfully.");
+                    closeEditProfileModal();
+                    // Update displayed username and email
+                    const usernameElement = document.querySelector('.profile-info p:nth-child(2)');
+                    const emailElement = document.querySelector('.profile-info p:nth-child(3)');
+                    usernameElement.textContent = `Username: ${newUsername}`;
+                    emailElement.textContent = `Email: ${newEmail}`;
+                }, 1500);
+            }
+
+            function saveSettings() {
+                const selectedTheme = document.getElementById("theme").value;
+                document.body.className = selectedTheme;
+                showNotification(`Theme set to ${selectedTheme}.`);
+            }
+
+            function addCertificateInput() {
+                const gridContainer = document.getElementById("certificateGrid");
+                const newCertificateIndex = gridContainer.children.length + 1;
+                const newCertificateItem = document.createElement("div");
+                newCertificateItem.className = "grid-item";
+                newCertificateItem.innerHTML = `
+                    <label for="certificate${newCertificateIndex}">Certificate ${newCertificateIndex}</label>
+                    <input type="file" id="certificate${newCertificateIndex}" onchange="uploadCertificate(this)">
+                `;
+                gridContainer.appendChild(newCertificateItem);
+            }
+
+            // Optional: Handle logout through sidebar link (using delegation)
+            document.querySelector('.sidebar nav ul').addEventListener('click', function(event) {
+                if (event.target.tagName === 'A' && event.target.getAttribute('href') === '#logout') {
+                    event.preventDefault();
+                    logout();
+                }
+            });
+        });
+    </script>
+</body>
 </html>
